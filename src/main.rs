@@ -4,9 +4,13 @@ pub mod matrix;
 use std::sync::mpsc;
 use std::thread;
 
+// learning rate
 const LR: f64 = 0.01;
+// standard deviation
 const SD: f64 = 0.1;
+// population size
 const PS: usize = 100;
+// num threads
 const NT: usize = 10;
 
 fn score(nn: &nn::NN) -> f64 {
@@ -40,22 +44,33 @@ fn main() {
     // initial parameters
     let mut nn = nn::new_gaussian_noise(vec![2, 2, 1]);
 
+    // g = generation
     let mut g = 0;
+    // update loop
     while score(&nn) <= -0.1 {
+        // print results every 50 generations
         if g % 50 == 0 {
             println!("Generation {}: {}", g, score(&nn));
             println!();
         }
+        // increment generation
         g += 1;
 
+        // will be used to update the network at end of loop
         let mut update = nn::new(vec![2, 2, 1]);
 
+        // sender and receiver between threads
         let (tx, rx) = mpsc::channel();
+        // stores handles of threads to join together later
         let mut handles = vec![];
 
+        // generate num threads
         for _ in 0..NT {
+            // clone sender
             let txc = tx.clone();
+            // clone neural network
             let nnc = nn.clone();
+            // create thread
             let handle = thread::spawn(move || {
                 let mut population: Vec<nn::NN> = Vec::new();
                 let mut gaussian_noise: Vec<nn::NN> = Vec::new();
@@ -77,15 +92,19 @@ fn main() {
                     // add weighted_gaussian to thread_update
                     thread_update = nn::add(&thread_update.clone(), &weighted_gaussian[i]).unwrap();
                 }
+                // send thread_update to receiver
                 txc.send(thread_update.clone()).unwrap();
             });
+            // add thread handle
             handles.push(handle);
         }
 
+        // for every handle, join back to main thread
         for handle in handles {
             handle.join().unwrap();
         }
 
+        // drop tx otherwise receiver hangs
         drop(tx);
 
         // calc update
@@ -97,7 +116,8 @@ fn main() {
         // update parameters
         nn = nn::add(&nn.clone(), &update).unwrap();
     }
-    println!("Generation {}: {}", g, score(&nn));
+    // print final generation and neural network topology
+    println!("Generation {}: {}\n\n", g, score(&nn));
     nn::print(&nn);
     println!();
 }
