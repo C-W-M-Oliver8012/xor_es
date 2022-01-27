@@ -1,0 +1,148 @@
+use rand::prelude::*;
+use rand_distr::StandardNormal;
+
+#[derive(Clone)]
+pub struct Matrix {
+    pub value: Vec<Vec<f64>>,
+    pub rows: usize,
+    pub columns: usize,
+}
+
+pub fn new(rows: usize, columns: usize) -> Matrix {
+    let mut m: Matrix = Matrix {
+        value: Vec::new(),
+        rows: rows,
+        columns: columns,
+    };
+
+    // init matrix
+    for i in 0..rows {
+        m.value.push(Vec::new());
+        for _j in 0..columns {
+            m.value[i].push(0.0);
+        }
+    }
+
+    // returns m
+    m
+}
+
+pub fn new_gaussian_noise(rows: usize, columns: usize) -> Matrix {
+    let mut m: Matrix = Matrix {
+        value: Vec::new(),
+        rows: rows,
+        columns: columns,
+    };
+
+    // init matrix
+    for i in 0..rows {
+        m.value.push(Vec::new());
+        for _j in 0..columns {
+            m.value[i].push(thread_rng().sample(StandardNormal));
+        }
+    }
+
+    // returns m
+    m
+}
+
+pub fn print(m: &Matrix) {
+    for i in 0..m.rows {
+        for j in 0..m.columns {
+            print!("{}, ", m.value[i][j]);
+        }
+        println!();
+    }
+}
+
+pub fn set_value(m: &mut Matrix, value: Vec<Vec<f64>>) -> Result<String, String> {
+    // checks value parameters to make sure it matches matrix
+    if value.len() == m.rows {
+        for i in 0..m.rows {
+            if value[i].len() != m.columns {
+                return Err(String::from("Matrix sizes do not match."));
+            }
+        }
+    } else {
+        return Err(String::from("Matrix sizes do not match."));
+    }
+
+    for i in 0..m.rows {
+        for j in 0..m.columns {
+            m.value[i][j] = value[i][j];
+        }
+    }
+
+    Ok(String::from("Success"))
+}
+
+pub fn multiply(a: &Matrix, b: &Matrix) -> Result<Matrix, String> {
+    if a.columns != b.rows {
+        return Err(String::from("Matrix sizes do not match."));
+    }
+    let mut c: Matrix = new(a.rows, b.columns);
+    for i in 0..a.rows {
+        for j in 0..b.columns {
+            let mut sum: f64 = 0.0;
+            for k in 0..a.columns {
+                sum += a.value[i][k] * b.value[k][j];
+            }
+            c.value[i][j] = sum;
+        }
+    }
+    Ok(c)
+}
+
+pub fn scalar(m: &Matrix, s: f64) -> Matrix {
+    let mut n = m.clone();
+    for i in 0..n.rows {
+        for j in 0..n.columns {
+            n.value[i][j] *= s;
+        }
+    }
+    n
+}
+
+pub fn add(a: &Matrix, b: &Matrix) -> Result<Matrix, String> {
+    if a.rows != b.rows || a.columns != b.columns {
+        return Err(String::from("Matrix sizes do not match."));
+    }
+    let mut c: Matrix = new(a.rows, a.columns);
+    for i in 0..a.rows {
+        for j in 0..a.columns {
+            c.value[i][j] = a.value[i][j] + b.value[i][j];
+        }
+    }
+    Ok(c)
+}
+
+pub fn subtract(a: &Matrix, b: &Matrix) -> Result<Matrix, String> {
+    if a.rows != b.rows || a.columns != b.columns {
+        return Err(String::from("Matrix sizes do not match."));
+    }
+    let mut c: Matrix = new(a.rows, a.columns);
+    for i in 0..a.rows {
+        for j in 0..a.columns {
+            c.value[i][j] = a.value[i][j] - b.value[i][j];
+        }
+    }
+    Ok(c)
+}
+
+pub fn activate(m: &Matrix) -> Matrix {
+    let mut n = m.clone();
+    for i in 0..n.rows {
+        for j in 0..n.columns {
+            n.value[i][j] = leaky_relu(n.value[i][j]);
+        }
+    }
+    n
+}
+
+pub fn leaky_relu(v: f64) -> f64 {
+    if v >= 0.0 {
+        return v;
+    } else {
+        return 0.25 * v;
+    }
+}
