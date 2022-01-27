@@ -58,14 +58,14 @@ fn score(nn: &nn::NN) -> (f64, bool) {
 
 fn main() {
     // initial parameters
-    let mut nn = nn::new_gaussian_noise(vec![2, 4, 2]);
+    let mut nn = nn::new_gaussian_noise(vec![2, 4, 4, 4, 2]);
 
     // g = generation
     let mut g = 0;
     // update loop
     while score(&nn).1 == false {
         // print results every 50 generations
-        if g % 50 == 0 {
+        if g % 20 == 0 {
             println!("Generation {}: {} {}", g, score(&nn).0, score(&nn).1);
             println!();
         }
@@ -73,7 +73,7 @@ fn main() {
         g += 1;
 
         // will be used to update the network at end of loop
-        let mut update = nn::new(vec![2, 4, 2]);
+        let mut update = nn::new(vec![2, 4, 4, 4, 2]);
 
         // sender and receiver between threads
         let (tx, rx) = mpsc::channel();
@@ -92,11 +92,11 @@ fn main() {
                 let mut gaussian_noise: Vec<nn::NN> = Vec::new();
                 let mut pop_scores: Vec<f64> = Vec::new();
                 let mut weighted_gaussian: Vec<nn::NN> = Vec::new();
-                let mut thread_update = nn::new(vec![2, 4, 2]);
+                let mut thread_update = nn::new(vec![2, 4, 4, 4, 2]);
 
                 for i in 0..PS {
                     // init gaussian noise
-                    gaussian_noise.push(nn::new_gaussian_noise(vec![2, 4, 2]));
+                    gaussian_noise.push(nn::new_gaussian_noise(vec![2, 4, 4, 4, 2]));
                     // multiply gaussian_noise by standard deviation
                     let temp = nn::scalar(&gaussian_noise[i], SD);
                     // add to current parameters
