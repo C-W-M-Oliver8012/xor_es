@@ -77,12 +77,15 @@ pub fn feedforward(nn: &NN, input: &matrix::Matrix) -> Result<matrix::Matrix, St
         return Err(String::from("Input of incorrect size."));
     }
 
-    let mut current_output = input.clone();
+    let mut current_output = matrix::normalize(&input);
 
     for i in 0..nn.connections.len() {
         current_output = matrix::multiply(&current_output.clone(), &nn.connections[i]).unwrap();
         current_output = matrix::add(&current_output.clone(), &nn.biases[i]).unwrap();
         current_output = matrix::activate(&current_output.clone());
+        if i != nn.connections.len() - 1 {
+            current_output = matrix::normalize(&current_output.clone());
+        }
     }
 
     Ok(current_output)

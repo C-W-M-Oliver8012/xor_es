@@ -129,6 +129,44 @@ pub fn subtract(a: &Matrix, b: &Matrix) -> Result<Matrix, String> {
     Ok(c)
 }
 
+pub fn mean(m: &Matrix) -> f64 {
+    let mut sum: f64 = 0.0;
+    for i in 0..m.rows {
+        for j in 0..m.columns {
+            sum += m.value[i][j];
+        }
+    }
+    sum / (m.rows * m.columns) as f64
+}
+
+pub fn variance(m: &Matrix, mean: f64) -> f64 {
+    let mut v: f64 = 0.0;
+    for i in 0..m.rows {
+        for j in 0..m.columns {
+            v += (m.value[i][j] - mean).powi(2);
+        }
+    }
+    v / (m.rows * m.columns) as f64
+}
+
+pub fn normalize(a: &Matrix) -> Matrix {
+    let mean = mean(a);
+    let variance = variance(a, mean);
+    let standard_deviation = variance.sqrt();
+    let mean_diff = 0.0 - mean;
+
+    let mut b = a.clone();
+    for i in 0..b.rows {
+        for j in 0..b.columns {
+            b.value[i][j] += mean_diff;
+            if standard_deviation != 0.0 {
+                b.value[i][j] /= standard_deviation;
+            }
+        }
+    }
+    b
+}
+
 pub fn activate(m: &Matrix) -> Matrix {
     let mut n = m.clone();
     for i in 0..n.rows {
