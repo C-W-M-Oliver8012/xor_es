@@ -49,9 +49,11 @@ pub fn new_gaussian_noise(topology: Vec<usize>) -> NN {
 
 pub fn print(nn: &NN) {
     println!("Topology:");
+    print!("[");
     for i in 0..nn.topology.len() {
         print!("{}, ", nn.topology[i]);
     }
+    print!("]");
     println!();
     println!();
 

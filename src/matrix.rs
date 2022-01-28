@@ -47,12 +47,15 @@ pub fn new_gaussian_noise(rows: usize, columns: usize) -> Matrix {
 }
 
 pub fn print(m: &Matrix) {
+    println!("[");
     for i in 0..m.rows {
+        print!("[");
         for j in 0..m.columns {
             print!("{}, ", m.value[i][j]);
         }
-        println!();
+        println!("]");
     }
+    println!("]");
 }
 
 pub fn set_value(m: &mut Matrix, value: Vec<Vec<f64>>) -> Result<String, String> {
