@@ -11,7 +11,7 @@ const SD: f64 = 0.1;
 // population size
 const PS: usize = 100;
 // num threads
-const NT: usize = 10;
+const NT: usize = 8;
 
 fn score(nn: &nn::NN) -> (f64, bool) {
     let mut pass: bool = true;
@@ -106,10 +106,10 @@ fn main() {
                     // calc weighted_gaussian
                     weighted_gaussian.push(nn::scalar(&gaussian_noise[i], pop_scores[i]));
                     // add weighted_gaussian to thread_update
-                    thread_update = nn::add(&thread_update.clone(), &weighted_gaussian[i]).unwrap();
+                    thread_update = nn::add(&thread_update, &weighted_gaussian[i]).unwrap();
                 }
                 // send thread_update to receiver
-                txc.send(thread_update.clone()).unwrap();
+                txc.send(thread_update).unwrap();
             });
             // add thread handle
             handles.push(handle);
@@ -125,12 +125,12 @@ fn main() {
 
         // calc update
         for r in rx {
-            update = nn::add(&update.clone(), &r).unwrap();
+            update = nn::add(&update, &r).unwrap();
         }
-        update = nn::scalar(&update.clone(), LR / ((PS * NT) as f64 * SD));
+        update = nn::scalar(&update, LR / ((PS * NT) as f64 * SD));
 
         // update parameters
-        nn = nn::add(&nn.clone(), &update).unwrap();
+        nn = nn::add(&nn, &update).unwrap();
     }
     // print final generation and neural network topology
     println!("Generation {}: {} {}\n\n", g, score(&nn).0, score(&nn).1);

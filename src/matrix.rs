@@ -96,14 +96,14 @@ pub fn multiply(a: &Matrix, b: &Matrix) -> Result<Matrix, String> {
     Ok(c)
 }
 
-pub fn scalar(m: &Matrix, s: f64) -> Matrix {
-    let mut n = m.clone();
-    for i in 0..n.rows {
-        for j in 0..n.columns {
-            n.value[i][j] *= s;
+pub fn scalar(a: &Matrix, s: f64) -> Matrix {
+    let mut b = a.clone();
+    for i in 0..b.rows {
+        for j in 0..b.columns {
+            b.value[i][j] *= s;
         }
     }
-    n
+    b
 }
 
 pub fn add(a: &Matrix, b: &Matrix) -> Result<Matrix, String> {
@@ -170,14 +170,14 @@ pub fn normalize(a: &Matrix) -> Matrix {
     b
 }
 
-pub fn activate(m: &Matrix) -> Matrix {
-    let mut n = m.clone();
-    for i in 0..n.rows {
-        for j in 0..n.columns {
-            n.value[i][j] = leaky_relu(n.value[i][j]);
+pub fn activate(a: &Matrix) -> Matrix {
+    let mut b = a.clone();
+    for i in 0..b.rows {
+        for j in 0..b.columns {
+            b.value[i][j] = leaky_relu(b.value[i][j]);
         }
     }
-    n
+    b
 }
 
 pub fn leaky_relu(v: f64) -> f64 {

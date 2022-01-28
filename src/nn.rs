@@ -82,12 +82,12 @@ pub fn feedforward(nn: &NN, input: &matrix::Matrix) -> Result<matrix::Matrix, St
     let mut current_output = matrix::normalize(&input);
 
     for i in 0..nn.connections.len() {
-        current_output = matrix::multiply(&current_output.clone(), &nn.connections[i]).unwrap();
-        current_output = matrix::add(&current_output.clone(), &nn.biases[i]).unwrap();
+        current_output = matrix::multiply(&current_output, &nn.connections[i]).unwrap();
+        current_output = matrix::add(&current_output, &nn.biases[i]).unwrap();
         if i != nn.connections.len() - 1 {
-            current_output = matrix::normalize(&current_output.clone());
+            current_output = matrix::normalize(&current_output);
         }
-        current_output = matrix::activate(&current_output.clone());
+        current_output = matrix::activate(&current_output);
     }
 
     Ok(current_output)
