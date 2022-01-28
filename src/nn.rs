@@ -89,6 +89,7 @@ pub fn feedforward(nn: &NN, input: &matrix::Matrix) -> Result<matrix::Matrix, St
         }
         current_output = matrix::activate(&current_output);
     }
+    //current_output = matrix::softmax(&current_output);
 
     Ok(current_output)
 }

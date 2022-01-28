@@ -167,6 +167,24 @@ pub fn activate(a: &Matrix) -> Matrix {
     b
 }
 
+pub fn softmax(a: &Matrix) -> Matrix {
+    let mut b = a.clone();
+
+    let mut sum: f64 = 0.0;
+    for i in 0..b.rows {
+        for j in 0..b.columns {
+            b.value[i][j] = b.value[i][j].exp();
+            sum += b.value[i][j];
+        }
+    }
+    for i in 0..b.rows {
+        for j in 0..b.columns {
+            b.value[i][j] /= sum;
+        }
+    }
+    b
+}
+
 pub fn leaky_relu(v: f64) -> f64 {
     if v >= 0.0 {
         return v;
@@ -330,6 +348,30 @@ mod tests {
         assert_eq!(b.rows, 2);
         assert_eq!(b.columns, 2);
         assert_eq!(b.value, [[2.0, -1.0], [-0.25, 7.0]]);
+    }
+
+    #[test]
+    fn softmax_test() {
+        let mut a = matrix::new(2, 2);
+        a.value = vec![
+            vec![2.0, -4.0],
+            vec![-1.0, 7.0]
+        ];
+
+        let first: f64 = (2.0_f64).exp();
+        let second: f64 = (-4.0_f64).exp();
+        let third: f64 = (-1.0_f64).exp();
+        let fourth: f64 = (7.0_f64).exp();
+        let total: f64 = first + second + third + fourth;
+        let sm = [
+            [first / total, second / total],
+            [third / total, fourth / total]
+        ];
+
+        let b = matrix::softmax(&a);
+        assert_eq!(b.rows, 2);
+        assert_eq!(b.columns, 2);
+        assert_eq!(b.value, sm);
     }
 
     #[test]

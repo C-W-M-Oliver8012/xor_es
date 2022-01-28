@@ -18,14 +18,14 @@ fn score(nn: &nn::NN) -> (f64, bool) {
     let mut score: f64 = 0.0;
     let mut input = matrix::new(1, 2);
 
-    // output.value[0][0] >= 0.0
-    // output.value[0][1] >= 1.0
+    // output.value[0][0] = 0.0
+    // output.value[0][1] = 1.0
 
     // 0.0, 0.0 -> 0.0
     matrix::set_value(&mut input, vec![vec![0.0, 0.0]]).unwrap();
     let output = nn::feedforward(&nn, &input).unwrap();
     score += output.value[0][0] - output.value[0][1];
-    if output.value[0][1] >= output.value[0][0] {
+    if output.value[0][0] <= output.value[0][1] {
         pass = false;
     }
 
@@ -33,7 +33,7 @@ fn score(nn: &nn::NN) -> (f64, bool) {
     matrix::set_value(&mut input, vec![vec![1.0, 0.0]]).unwrap();
     let output = nn::feedforward(&nn, &input).unwrap();
     score += output.value[0][1] - output.value[0][0];
-    if output.value[0][0] >= output.value[0][1] {
+    if output.value[0][1] <= output.value[0][0] {
         pass = false;
     }
 
@@ -41,7 +41,7 @@ fn score(nn: &nn::NN) -> (f64, bool) {
     matrix::set_value(&mut input, vec![vec![0.0, 1.0]]).unwrap();
     let output = nn::feedforward(&nn, &input).unwrap();
     score += output.value[0][1] - output.value[0][0];
-    if output.value[0][0] >= output.value[0][1] {
+    if output.value[0][1] <= output.value[0][0] {
         pass = false;
     }
 
@@ -49,7 +49,7 @@ fn score(nn: &nn::NN) -> (f64, bool) {
     matrix::set_value(&mut input, vec![vec![1.0, 1.0]]).unwrap();
     let output = nn::feedforward(&nn, &input).unwrap();
     score += output.value[0][0] - output.value[0][1];
-    if output.value[0][1] >= output.value[0][0] {
+    if output.value[0][0] <= output.value[0][1] {
         pass = false;
     }
 
@@ -66,7 +66,8 @@ fn main() {
     while score(&nn).1 == false {
         // print results every 50 generations
         if g % 1 == 0 {
-            println!("Generation {}: {} {}", g, score(&nn).0, score(&nn).1);
+            let s = score(&nn);
+            println!("Generation {}: {}", g, s.0);
             println!();
         }
         // increment generation
@@ -133,7 +134,25 @@ fn main() {
         nn = nn::add(&nn, &update).unwrap();
     }
     // print final generation and neural network topology
-    println!("Generation {}: {} {}\n\n", g, score(&nn).0, score(&nn).1);
+    let s = score(&nn);
+    println!("Generation {}: {}", g, s.0);
     nn::print(&nn);
     println!();
+
+    let mut input = matrix::new(1, 2);
+    input.value = vec![vec![0.0, 0.0]];
+    let output = nn::feedforward(&nn, &input).unwrap();
+    println!("0.0, 0.0 = {}, {}", output.value[0][0], output.value[0][1]);
+
+    input.value = vec![vec![1.0, 0.0]];
+    let output = nn::feedforward(&nn, &input).unwrap();
+    println!("1.0, 0.0 = {}, {}", output.value[0][0], output.value[0][1]);
+
+    input.value = vec![vec![0.0, 1.0]];
+    let output = nn::feedforward(&nn, &input).unwrap();
+    println!("0.0, 1.0 = {}, {}", output.value[0][0], output.value[0][1]);
+
+    input.value = vec![vec![1.0, 1.0]];
+    let output = nn::feedforward(&nn, &input).unwrap();
+    println!("1.0, 1.0 = {}, {}", output.value[0][0], output.value[0][1]);
 }
