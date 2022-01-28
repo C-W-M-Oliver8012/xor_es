@@ -119,19 +119,6 @@ pub fn add(a: &Matrix, b: &Matrix) -> Result<Matrix, String> {
     Ok(c)
 }
 
-pub fn subtract(a: &Matrix, b: &Matrix) -> Result<Matrix, String> {
-    if a.rows != b.rows || a.columns != b.columns {
-        return Err(String::from("Matrix sizes do not match."));
-    }
-    let mut c: Matrix = new(a.rows, a.columns);
-    for i in 0..a.rows {
-        for j in 0..a.columns {
-            c.value[i][j] = a.value[i][j] - b.value[i][j];
-        }
-    }
-    Ok(c)
-}
-
 pub fn mean(m: &Matrix) -> f64 {
     let mut sum: f64 = 0.0;
     for i in 0..m.rows {
@@ -185,5 +172,172 @@ pub fn leaky_relu(v: f64) -> f64 {
         return v;
     } else {
         return 0.25 * v;
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::matrix;
+
+    #[test]
+    fn new_test() {
+        let tm = matrix::new(2, 5);
+        assert_eq!(tm.rows, 2);
+        assert_eq!(tm.columns, 5);
+        assert_eq!(tm.value, [[0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0]]);
+    }
+
+    #[test]
+    fn new_gaussian_noise_test() {
+        let tm = matrix::new_gaussian_noise(2, 5);
+        assert_eq!(tm.rows, 2);
+        assert_eq!(tm.columns, 5);
+        assert_ne!(tm.value, [[0.0, 0.0, 0.0, 0.0, 0.0], [0.0, 0.0, 0.0, 0.0, 0.0]]);
+    }
+
+    #[test]
+    fn print_test() {
+        let tm = matrix::new(2, 5);
+        matrix::print(&tm);
+    }
+
+    #[test]
+    fn set_value_test() {
+        let mut tm = matrix::new(2, 5);
+        matrix::set_value(&mut tm, vec![
+                vec![2.0, 4.0, 6.7, 1.78, 4.357],
+                vec![5.7, 8.94, 2.63, 2.56, 3.94]
+        ]).unwrap();
+        assert_eq!(tm.value, vec![
+                vec![2.0, 4.0, 6.7, 1.78, 4.357],
+                vec![5.7, 8.94, 2.63, 2.56, 3.94]
+        ]);
+    }
+
+    #[test]
+    fn multiply_test() {
+        let mut a = matrix::new(2, 5);
+        let mut b = matrix::new(5, 2);
+
+        a.value = vec![
+            vec![1.0, 3.0, 6.0, 7.0, 2.0],
+            vec![12.0, 4.0, 10.0, 5.0, 3.0]
+        ];
+
+        b.value = vec![
+            vec![3.0, 7.0],
+            vec![1.0, 6.0],
+            vec![8.0, 20.0],
+            vec![3.0, 8.0],
+            vec![9.0, 2.0]
+        ];
+
+        let c = matrix::multiply(&a, &b).unwrap();
+        assert_eq!(c.rows, 2);
+        assert_eq!(c.columns, 2);
+        assert_eq!(c.value, [[93.0, 205.0], [162.0, 354.0]]);
+    }
+
+    #[test]
+    fn scalar_test() {
+        let mut a = matrix::new(2, 5);
+        a.value = vec![
+            vec![1.0, 3.0, 6.0, 7.0, 2.0],
+            vec![12.0, 4.0, 10.0, 5.0, 3.0]
+        ];
+
+        let b = matrix::scalar(&a, 2.0);
+        assert_eq!(b.rows, 2);
+        assert_eq!(b.columns, 5);
+        assert_eq!(b.value, [[2.0, 6.0, 12.0, 14.0, 4.0], [24.0, 8.0, 20.0, 10.0, 6.0]]);
+    }
+
+    #[test]
+    fn add_test() {
+        let mut a = matrix::new(2, 2);
+        let mut b = matrix::new(2, 2);
+
+        a.value = vec![
+            vec![2.0, 4.0],
+            vec![1.0, 7.0]
+        ];
+
+        b.value = vec![
+            vec![1.0, 2.0],
+            vec![3.0, 4.0]
+        ];
+
+        let c = matrix::add(&a, &b).unwrap();
+        assert_eq!(c.rows, 2);
+        assert_eq!(c.columns, 2);
+        assert_eq!(c.value, [[3.0, 6.0], [4.0, 11.0]]);
+    }
+
+    #[test]
+    fn mean_test() {
+        let mut a = matrix::new(2, 2);
+        a.value = vec![
+            vec![2.0, 4.0],
+            vec![1.0, 7.0]
+        ];
+
+        assert_eq!(matrix::mean(&a), 3.5);
+    }
+
+    #[test]
+    fn variance_test() {
+        let mut a = matrix::new(2, 2);
+        a.value = vec![
+            vec![2.0, 4.0],
+            vec![1.0, 7.0]
+        ];
+
+        assert_eq!(matrix::variance(&a, matrix::mean(&a)), 5.25);
+    }
+
+    #[test]
+    fn normalize_test() {
+        let mut a = matrix::new(2, 2);
+        a.value = vec![
+            vec![2.0, 4.0],
+            vec![1.0, 7.0]
+        ];
+
+        let mean = matrix::mean(&a);
+        let standard_deviation = matrix::variance(&a, mean).sqrt();
+        let expected_b_value = [
+            [(a.value[0][0] - mean) / standard_deviation, (a.value[0][1] - mean) / standard_deviation],
+            [(a.value[1][0] - mean) / standard_deviation, (a.value[1][1] - mean) / standard_deviation],
+        ];
+
+        let b = matrix::normalize(&a);
+        assert_eq!(b.rows, 2);
+        assert_eq!(b.columns, 2);
+        assert_eq!(b.value, expected_b_value);
+        assert_eq!(matrix::mean(&b), 0.0);
+        assert_eq!(matrix::variance(&b, matrix::mean(&b)).sqrt(), 1.0);
+    }
+
+    #[test]
+    fn activate_test() {
+        let mut a = matrix::new(2, 2);
+        a.value = vec![
+            vec![2.0, -4.0],
+            vec![-1.0, 7.0]
+        ];
+
+        let b = matrix::activate(&a);
+        assert_eq!(b.rows, 2);
+        assert_eq!(b.columns, 2);
+        assert_eq!(b.value, [[2.0, -1.0], [-0.25, 7.0]]);
+    }
+
+    #[test]
+    fn leaky_relu_test() {
+        let a: f64 = 1.45;
+        let b: f64 = -8.95;
+
+        assert_eq!(matrix::leaky_relu(a), a);
+        assert_eq!(matrix::leaky_relu(b), b * 0.25);
     }
 }
