@@ -1,4 +1,4 @@
-use crate::matrix;
+pub mod matrix;
 
 #[derive(Clone)]
 pub struct NN {
@@ -14,13 +14,9 @@ pub fn new(topology: Vec<usize>) -> NN {
         biases: Vec::new(),
     };
 
-    // create connections
+    // create connections and biases
     for i in 1..nn.topology.len() {
         nn.connections.push(matrix::new(nn.topology[i - 1], nn.topology[i]));
-    }
-
-    // create biases
-    for i in 1..nn.topology.len() {
         nn.biases.push(matrix::new(1, nn.topology[i]));
     }
 
@@ -34,13 +30,9 @@ pub fn new_gaussian_noise(topology: Vec<usize>) -> NN {
         biases: Vec::new(),
     };
 
-    // create connections
+    // create connections and biases
     for i in 1..nn.topology.len() {
         nn.connections.push(matrix::new_gaussian_noise(nn.topology[i - 1], nn.topology[i]));
-    }
-
-    // create biases
-    for i in 1..nn.topology.len() {
         nn.biases.push(matrix::new_gaussian_noise(1, nn.topology[i]));
     }
 
@@ -87,7 +79,7 @@ pub fn feedforward(nn: &NN, input: &matrix::Matrix) -> Result<matrix::Matrix, St
         if i != nn.connections.len() - 1 {
             current_output = matrix::normalize(&current_output);
         }
-        current_output = matrix::activate(&current_output);
+        current_output = matrix::leaky_relu(&current_output);
     }
 
     Ok(current_output)

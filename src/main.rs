@@ -1,20 +1,20 @@
 pub mod nn;
-pub mod matrix;
 
+use nn::matrix;
 use std::sync::mpsc;
 use std::thread;
 
 // learning rate
-const LR: f64 = 0.01;
+const LR: f64 = 0.1;
 // standard deviation
 const SD: f64 = 0.1;
 // population size
-const PS: usize = 100;
+const PS: usize = 1000;
 // num threads
-const NT: usize = 8;
+const NT: usize = 10;
 
 fn score(nn: &nn::NN) -> (f64, bool) {
-    let mut pass: bool = true;
+    let mut pass: bool = false;
     let mut score: f64 = 0.0;
     let mut input = matrix::new(1, 2);
 
@@ -22,35 +22,26 @@ fn score(nn: &nn::NN) -> (f64, bool) {
     // output.value[0][1] = 1.0
 
     // 0.0, 0.0 -> 0.0
-    matrix::set_value(&mut input, vec![vec![0.0, 0.0]]).unwrap();
+    input.value = vec![0.0, 0.0];
     let output = nn::feedforward(&nn, &input).unwrap();
-    score += output.value[0][0] - output.value[0][1];
-    if output.value[0][0] <= output.value[0][1] {
-        pass = false;
-    }
+    score += (output.value[0] - output.value[1]).min(1.0);
 
     // 1.0, 0.0 -> 1.0
-    matrix::set_value(&mut input, vec![vec![1.0, 0.0]]).unwrap();
+    input.value = vec![1.0, 0.0];
     let output = nn::feedforward(&nn, &input).unwrap();
-    score += output.value[0][1] - output.value[0][0];
-    if output.value[0][1] <= output.value[0][0] {
-        pass = false;
-    }
+    score += (output.value[1] - output.value[0]).min(1.0);
 
     // 0.0, 1.0 -> 1.0
-    matrix::set_value(&mut input, vec![vec![0.0, 1.0]]).unwrap();
+    input.value = vec![0.0, 1.0];
     let output = nn::feedforward(&nn, &input).unwrap();
-    score += output.value[0][1] - output.value[0][0];
-    if output.value[0][1] <= output.value[0][0] {
-        pass = false;
-    }
+    score += (output.value[1] - output.value[0]).min(1.0);
 
     // 1.0, 1.0 -> 0.0
-    matrix::set_value(&mut input, vec![vec![1.0, 1.0]]).unwrap();
+    input.value = vec![1.0, 1.0];
     let output = nn::feedforward(&nn, &input).unwrap();
-    score += output.value[0][0] - output.value[0][1];
-    if output.value[0][0] <= output.value[0][1] {
-        pass = false;
+    score += (output.value[0] - output.value[1]).min(1.0);
+    if score == 4.0 {
+        pass = true;
     }
 
     (score, pass)
@@ -58,7 +49,7 @@ fn score(nn: &nn::NN) -> (f64, bool) {
 
 fn main() {
     // initial parameters
-    let mut nn = nn::new_gaussian_noise(vec![2, 4, 4, 2]);
+    let mut nn = nn::new_gaussian_noise(vec![2, 4, 4, 4, 2]);
 
     // g = generation
     let mut g = 0;
@@ -74,7 +65,7 @@ fn main() {
         g += 1;
 
         // will be used to update the network at end of loop
-        let mut update = nn::new(vec![2, 4, 4, 2]);
+        let mut update = nn::new(vec![2, 4, 4, 4, 2]);
 
         // sender and receiver between threads
         let (tx, rx) = mpsc::channel();
@@ -93,11 +84,11 @@ fn main() {
                 let mut gaussian_noise: Vec<nn::NN> = Vec::new();
                 let mut pop_scores: Vec<f64> = Vec::new();
                 let mut weighted_gaussian: Vec<nn::NN> = Vec::new();
-                let mut thread_update = nn::new(vec![2, 4, 4, 2]);
+                let mut thread_update = nn::new(vec![2, 4, 4, 4, 2]);
 
                 for i in 0..PS {
                     // init gaussian noise
-                    gaussian_noise.push(nn::new_gaussian_noise(vec![2, 4, 4, 2]));
+                    gaussian_noise.push(nn::new_gaussian_noise(vec![2, 4, 4, 4, 2]));
                     // multiply gaussian_noise by standard deviation
                     let temp = nn::scalar(&gaussian_noise[i], SD);
                     // add to current parameters
@@ -140,19 +131,19 @@ fn main() {
     println!();
 
     let mut input = matrix::new(1, 2);
-    input.value = vec![vec![0.0, 0.0]];
+    input.value = vec![0.0, 0.0];
     let output = nn::feedforward(&nn, &input).unwrap();
-    println!("0.0, 0.0 = {}, {}", output.value[0][0], output.value[0][1]);
+    println!("0.0, 0.0 = {}, {}", output.value[0], output.value[1]);
 
-    input.value = vec![vec![1.0, 0.0]];
+    input.value = vec![1.0, 0.0];
     let output = nn::feedforward(&nn, &input).unwrap();
-    println!("1.0, 0.0 = {}, {}", output.value[0][0], output.value[0][1]);
+    println!("1.0, 0.0 = {}, {}", output.value[0], output.value[1]);
 
-    input.value = vec![vec![0.0, 1.0]];
+    input.value = vec![0.0, 1.0];
     let output = nn::feedforward(&nn, &input).unwrap();
-    println!("0.0, 1.0 = {}, {}", output.value[0][0], output.value[0][1]);
+    println!("0.0, 1.0 = {}, {}", output.value[0], output.value[1]);
 
-    input.value = vec![vec![1.0, 1.0]];
+    input.value = vec![1.0, 1.0];
     let output = nn::feedforward(&nn, &input).unwrap();
-    println!("1.0, 1.0 = {}, {}", output.value[0][0], output.value[0][1]);
+    println!("1.0, 1.0 = {}, {}", output.value[0], output.value[1]);
 }
